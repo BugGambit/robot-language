@@ -3,26 +3,51 @@ DROP - will drop the plate on top of the stack if the stack contains at least on
 MOVE (LEFT|RIGHT|UP|DOWN) - moves in the direction if it does not go outside the grid
 <!-- PEAK - returns True if there is a plate on the cell -->
 
-Example code:
+Tasks:
 
+1. Pick up all numbers
+Example:
 ```
-MOVE RIGHT
-MOVE RIGHT
-PICK
-MOVE DOWN
-DROP
-MOVE UP
-MOVE RIGHT
-PICK
-MOVE DOWN
-DROP
+while (move left) {}
+while (move up) {}
 
-WHILE (MOVE RIGHT) {
-    PICK
-}
-MOVE DOWN
-WHILE (MOVE LEFT) {}
-WHILE (MOVE RIGHT) {
-    DROP
-}
+do {
+  do {
+    pick
+  } while (move right)
+  move down
+  do {
+    pick
+  } while (move left)
+} while (move down)
 ```
+2. End program with highest number in the stack only
+3. Put a number in each corner (only 4 numbers)
+```
+while (move left) {}
+while (move up) {}
+
+do {
+  do {
+    pick
+  } while (move right)
+  move down
+  do {
+    pick
+  } while (move left)
+} while (move down)
+
+while (move left) {}
+while (move up) {}
+drop
+
+while (move right) {}
+drop
+
+while (move down) {}
+drop
+
+while (move left) {}
+drop
+```
+4. Put all numbers in the first row in sorted order

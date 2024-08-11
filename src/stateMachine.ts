@@ -1,32 +1,39 @@
 import { ASTCommand, ASTNode, Direction } from "./ast";
+import { State } from "./state";
 
-export type State = {
-    grid: Grid;
-    position: Position;
-    plates: Plate[];
-};
-
-type Grid = number[][];
-type Position = {
-    x: number;
-    y: number;
-};
-type Plate = number;
-
-export function runProgram(state: State, astNodes: ASTNode[]) {
-    console.log('run program: ', astNodes);
+export function* runProgram(state: State, astNodes: ASTNode[]) {
     for (const node of astNodes) {
         switch (node.type) {
             case 'PICK':
             case 'DROP':
             case 'MOVE': {
                 runCommand(state, node);
+                yield;
                 break;
             }
             case 'WHILE': {
                 while (checkCondition(state, node.condition)) {
-                    runProgram(state, node.body);
+                    yield;
+                    const programIterator = runProgram(state, node.body);
+                    for (const _ of programIterator) {
+                        yield;
+                    }
                 }
+                break;
+            }
+            case 'DO_WHILE': {
+                let isFirstIteration = true;
+                do {
+                    if (isFirstIteration) {
+                        isFirstIteration = false;
+                    } else {
+                        yield;
+                    }
+                    const programIterator = runProgram(state, node.body);
+                    for (const _ of programIterator) {
+                        yield;
+                    }
+                } while (checkCondition(state, node.condition));
                 break;
             }
             default:

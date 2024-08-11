@@ -1,16 +1,19 @@
 import { describe, expect, test } from 'vitest'
 import { ASTNode, Direction } from './ast';
-import { runProgram, State } from './stateMachine';
+import { runProgram } from './stateMachine';
+import { createState, State } from './state';
 
-function createState(grid: string[], x: number, y: number, plates: number[]): State {
-    return {
-        grid: grid.map(row => row.split(' ').map(cell => cell === '_' ? 0 : parseInt(cell))),
-        position: {x, y},
-        plates,
-    };
+function getFinalStateFromProgram(state: State, astNodes: ASTNode[]): State {
+    const programIterator = runProgram(state, astNodes);
+    for (const _ of programIterator) {
+        continue;
+    }
+    return state;
 }
 
 const emptyGrid = [
+    '_ _ _ _ _ _ _',
+    '_ _ _ _ _ _ _',
     '_ _ _ _ _ _ _',
     '_ _ _ _ _ _ _',
     '_ _ _ _ _ _ _',
@@ -26,29 +29,31 @@ describe('pick', () => {
             '_ 1 _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 1, 2, []);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'PICK'}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 1, 2, [1]);
+        const expectedState = createState(emptyGrid, {x: 1, y: 2}, [1]);
         expect(state).toEqual(expectedState);
     })
     
     test('should ignore pick command if no plate on grid', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'PICK'}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 1, 2, []);
+        const expectedState = createState(emptyGrid, {x: 1, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
 });
 
 describe('drop', () => {
     test('should drop plate', () => {
-        const state = createState(emptyGrid, 1, 2, [1]);
+        const state = createState(emptyGrid, {x: 1, y: 2}, [1]);
         const ast: ASTNode[] = [{type: 'DROP'}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
         const expectedState = createState([
             '_ _ _ _ _ _ _',
@@ -56,7 +61,9 @@ describe('drop', () => {
             '_ 1 _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 1, 2, []);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 1, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
     
@@ -67,9 +74,11 @@ describe('drop', () => {
             '_ 2 _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 1, 2, [1]);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 1, y: 2}, [1]);
         const ast: ASTNode[] = [{type: 'DROP'}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
         const expectedState = createState([
             '_ _ _ _ _ _ _',
@@ -77,78 +86,80 @@ describe('drop', () => {
             '_ 2 _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 1, 2, [1]);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 1, y: 2}, [1]);
         expect(state).toEqual(expectedState);
     })
 
     test('should not drop plate holding no plate', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'DROP'}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 1, 2, []);
+        const expectedState = createState(emptyGrid, {x: 1, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
 });
 
 describe('move', () => {
     test('should move left', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'MOVE', direction: Direction.Left}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 0, 2, []);
+        const expectedState = createState(emptyGrid, {x: 0, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
 
     test('should move right', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'MOVE', direction: Direction.Right}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 2, 2, []);
+        const expectedState = createState(emptyGrid, {x: 2, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
 
     test('should move up', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'MOVE', direction: Direction.Up}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 1, 1, []);
+        const expectedState = createState(emptyGrid, {x: 1, y: 1}, []);
         expect(state).toEqual(expectedState);
     })
 
     test('should move down', () => {
-        const state = createState(emptyGrid, 1, 2, []);
+        const state = createState(emptyGrid, {x: 1, y: 2}, []);
         const ast: ASTNode[] = [{type: 'MOVE', direction: Direction.Down}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 1, 3, []);
+        const expectedState = createState(emptyGrid, {x: 1, y: 3}, []);
         expect(state).toEqual(expectedState);
     })
 
     test('should not move out of bounds', () => {
-        const state = createState(emptyGrid, 0, 2, []);
+        const state = createState(emptyGrid, {x: 0, y: 2}, []);
         const ast: ASTNode[] = [{type: 'MOVE', direction: Direction.Left}];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 0, 2, []);
+        const expectedState = createState(emptyGrid, {x: 0, y: 2}, []);
         expect(state).toEqual(expectedState);
     });
 });
 
 describe('while-loops', () => {
     test('should execute while-loop with empty body', () => {
-        const state = createState(emptyGrid, 5, 2, []);
+        const state = createState(emptyGrid, {x: 5, y: 2}, []);
         const ast: ASTNode[] = [{
             type: 'WHILE',
             condition: {type: 'MOVE', direction: Direction.Left},
             body: [],
         }];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 0, 2, []);
+        const expectedState = createState(emptyGrid, {x: 0, y: 2}, []);
         expect(state).toEqual(expectedState);
     })
 
@@ -159,15 +170,17 @@ describe('while-loops', () => {
             '_ 1 2 5 3 4 _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 6, 2, []);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 6, y: 2}, []);
         const ast: ASTNode[] = [{
             type: 'WHILE',
             condition: {type: 'MOVE', direction: Direction.Left},
             body: [{type: 'PICK'}],
         }];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
-        const expectedState = createState(emptyGrid, 0, 2, [4, 3, 5, 2, 1]);
+        const expectedState = createState(emptyGrid, {x: 0, y: 2}, [4, 3, 5, 2, 1]);
         expect(state).toEqual(expectedState);
     })
 
@@ -177,8 +190,10 @@ describe('while-loops', () => {
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
             '_ 1 2 5 3 4 _',
-        ], 6, 4, []);
+        ], {x: 6, y: 6}, []);
         const ast: ASTNode[] = [{
             type: 'WHILE',
             condition: {type: 'MOVE', direction: Direction.Left},
@@ -197,7 +212,7 @@ describe('while-loops', () => {
                 },
             ],
         }];
-        runProgram(state, ast);
+        getFinalStateFromProgram(state, ast);
     
         const expectedState = createState([
             '_ 1 2 5 3 4 _',
@@ -205,7 +220,47 @@ describe('while-loops', () => {
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
             '_ _ _ _ _ _ _',
-        ], 0, 4, []);
+            '_ _ _ _ _ _ _',
+            '_ _ _ _ _ _ _',
+        ], {x: 0, y: 6}, []);
         expect(state).toEqual(expectedState);
+    })
+
+    test('iterator should yield after each command', () => {
+        const state = createState(emptyGrid, {x: 3, y: 2}, [4, 3, 1, 2, 5]);
+        const ast: ASTNode[] = [{
+            type: 'WHILE',
+            condition: {type: 'MOVE', direction: Direction.Left},
+            body: [{type: 'DROP'}],
+        }];
+        const programIterator = runProgram(state, ast);
+        expect(state.position).toEqual({x: 3, y: 2});
+        expect(state.plates).toEqual([4, 3, 1, 2, 5]);
+        
+        programIterator.next();
+        expect(state.position).toEqual({x: 2, y: 2});
+        expect(state.plates).toEqual([4, 3, 1, 2, 5]);
+
+        programIterator.next();
+        expect(state.position).toEqual({x: 2, y: 2});
+        expect(state.plates).toEqual([4, 3, 1, 2]);
+
+        programIterator.next();
+        expect(state.position).toEqual({x: 1, y: 2});
+        expect(state.plates).toEqual([4, 3, 1, 2]);
+
+        programIterator.next();
+        expect(state.position).toEqual({x: 1, y: 2});
+        expect(state.plates).toEqual([4, 3, 1]);
+
+        programIterator.next();
+        expect(state.position).toEqual({x: 0, y: 2});
+        expect(state.plates).toEqual([4, 3, 1]);
+
+        programIterator.next();
+        expect(state.position).toEqual({x: 0, y: 2});
+        expect(state.plates).toEqual([4, 3]);
+
+        expect(programIterator.next().done).toBe(true);
     })
 });

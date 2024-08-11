@@ -12,15 +12,18 @@ test('ignore extra spaces', () => {
 });
 
 test('ignore new lines', () => {
-    const actual = tokenize(`
-        MOVE  
-        LEFT  
-    `);
+    const actual = tokenize(`MOVE
+LEFT`);
     expect(actual).toEqual(['MOVE', 'LEFT']);
 });
 
 test('ignore tabs', () => {
     const actual = tokenize(`\t \t MOVE  LEFT  \t`);
+    expect(actual).toEqual(['MOVE', 'LEFT']);
+});
+
+test('ignore casing', () => {
+    const actual = tokenize(`Move left`);
     expect(actual).toEqual(['MOVE', 'LEFT']);
 });
 

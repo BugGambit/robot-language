@@ -1,11 +1,14 @@
 export type Tokens = string[];
 
 export function tokenize(input: string): Tokens {
+    const uppercasedInput = input.toUpperCase();
     const tokens: Tokens = [];
     let currentToken = '';
     const charsToIgnore = ['\r', '\n', '\t'];
-    for (let char of input) {
+    for (let char of uppercasedInput) {
         if (charsToIgnore.includes(char)) {
+            tokens.push(currentToken);
+            currentToken = '';
             continue;
         }
         if (['(', ')', '{', '}'].includes(char)) {

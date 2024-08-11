@@ -7,7 +7,7 @@ export enum Direction {
     Right = "RIGHT",
 }
 
-export type ASTNode = ASTCommand | WhileLoop;
+export type ASTNode = ASTCommand | WhileLoop | DoWhileLoop;
 export type ASTCommand = PickCommand | DropCommand | MoveCommand;
 
 type PickCommand = {
@@ -29,8 +29,13 @@ type WhileLoop = {
     body: ASTNode[],
 }
 
+type DoWhileLoop = {
+    type: 'DO_WHILE',
+    condition: ASTNode,
+    body: ASTNode[],
+}
+
 export function buildAstFromTokens(tokens: Tokens): ASTNode[] {
-    console.log('build ast from tokens: ', tokens);
     const stack = [...tokens].reverse();
     const astNodes: ASTNode[] = [];
     while (stack.length > 0) {
@@ -65,6 +70,25 @@ export function buildAstFromTokens(tokens: Tokens): ASTNode[] {
                 const bodyAst = buildAstFromTokens(bodyTokens);
                 astNodes.push({
                     type: 'WHILE',
+                    condition: conditionAst[0],
+                    body: bodyAst,
+                });
+                break;
+            }
+            case 'DO': {
+                const bodyTokens = parseClause(stack, '{', '}');
+                const whileToken = stack.pop();
+                if (whileToken !== 'WHILE') {
+                    throw new Error('Invalid DO-WHILE loop. Missing WHILE');
+                }
+                const conditionTokens = parseClause(stack, '(', ')');
+                const conditionAst = buildAstFromTokens(conditionTokens);
+                if (conditionAst.length !== 1) {
+                    throw new Error('Invalid condition');
+                }
+                const bodyAst = buildAstFromTokens(bodyTokens);
+                astNodes.push({
+                    type: 'DO_WHILE',
                     condition: conditionAst[0],
                     body: bodyAst,
                 });
